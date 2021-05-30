@@ -1,5 +1,5 @@
 {
-  "name": "emailveri",
+  "name": "two_step",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,7 +13,6 @@
     "ejs": "^3.1.6",
     "express": "^4.17.1",
     "node-2fa": "^2.0.2",
-    "nodemailer": "^6.6.1",
-    "two-step-auth": "^1.1.2"
+    "nodemailer": "^6.6.1"
   }
 }
