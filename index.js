@@ -1,19 +1,27 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const twoFactor = require('node-2fa');
-const app = express();
 const bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({ extended: true }));
+const cookieParser = require('cookie-parser');
+
 const port = 3000
+
+const app = express();
+
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 var codeMain = null;
 var secretMain = null;
+
 function sendEmail(email) {
   const secret = twoFactor.generateSecret({ name: "My Awesome App", account: "johndoe" });
   const token = twoFactor.generateToken(secret.secret);
+
   codeMain = token.token;
   secretMain = secret.secret;
+
   var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -36,6 +44,7 @@ function sendEmail(email) {
       console.log('Email sent: ' + info.response);
     }
   });
+  return secret;
 }
 
 app.set('view engine', 'ejs');
@@ -47,18 +56,19 @@ app.get('/', (req, res) => {
 
 app.post('/', (req, res) => {
   console.log(req.body);
-  sendEmail(req.body.email);
+  const secret = sendEmail(req.body.email);
+  res.cookie('secret', secret.secret);
   res.redirect('/veri');
 })
 
 app.get('/veri', (req, res) => {
+  console.log(req.cookies);
   res.render('verification');
 })
 
 app.post('/veri', (req, res) => {
-  console.log(req.body.code, codeMain);
-  console.log(twoFactor.verifyToken(secretMain, req.body.code));
-  if(twoFactor.verifyToken(secretMain, req.body.code)){
+  console.log(twoFactor.verifyToken(req.cookies.secret, req.body.code));
+  if(twoFactor.verifyToken(req.cookies.secret, req.body.code)){
     console.log("Correct");
     res.redirect('/success');
   }
